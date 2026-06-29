@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>curl to fetch | JavaScript fetch and Python requests converter</title>
+<meta name="description" content="Convert a curl command into JavaScript fetch or Python requests code. Free, single file, runs entirely in your browser.">
+<link rel="canonical" href="https://0xelitesystem.github.io/curl-to-fetch/">
+<meta property="og:title" content="curl to fetch">
+<meta property="og:description" content="Convert a curl command into JavaScript fetch or Python requests code. Runs entirely in your browser.">
+<meta property="og:url" content="https://0xelitesystem.github.io/curl-to-fetch/">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"curl to fetch","applicationCategory":"DeveloperApplication","operatingSystem":"Any (browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://0xelitesystem.github.io/curl-to-fetch/","author":{"@type":"Person","name":"0xelitesystem","url":"https://elitesystem.ai"}}
+</script>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --panel-2: #f0f2f5;
+  --ink: #11181c;
+  --muted: #5b6770;
+  --border: #d9dde2;
+  --accent: #0b66c3;
+  --accent-ink: #ffffff;
+  --code-bg: #f4f6f8;
+  --code-ink: #0d2b3e;
+  --warn-bg: #fff6e6;
+  --warn-border: #e0b35a;
+  --warn-ink: #6b4e09;
+  --err-bg: #fdecec;
+  --err-border: #d98a8a;
+  --err-ink: #7a1f1f;
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Consolas", "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1216;
+    --panel: #161b22;
+    --panel-2: #1c232c;
+    --ink: #e7edf2;
+    --muted: #9aa6b2;
+    --border: #2a323c;
+    --accent: #4ea0f0;
+    --accent-ink: #06121f;
+    --code-bg: #0c1117;
+    --code-ink: #cfe3f2;
+    --warn-bg: #2a230f;
+    --warn-border: #6b561f;
+    --warn-ink: #e8cf8a;
+    --err-bg: #2b1414;
+    --err-border: #6b2a2a;
+    --err-ink: #f0b3b3;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-size: 16px;
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 28px 18px 60px; }
+header h1 { font-size: 1.55rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); font-size: 0.97rem; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 8px; }
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--ink);
+  padding: 7px 13px;
+  border-radius: 8px;
+  transition: background 0.12s, border-color 0.12s;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label.field { display: block; font-size: 0.85rem; color: var(--muted); margin: 14px 0 6px; }
+textarea {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--ink);
+  tab-size: 2;
+}
+textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.msg { margin-top: 12px; padding: 10px 13px; border-radius: 9px; font-size: 0.9rem; border: 1px solid transparent; white-space: pre-wrap; }
+.msg.err { background: var(--err-bg); border-color: var(--err-border); color: var(--err-ink); }
+.msg.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-ink); }
+.msg ul { margin: 4px 0 0; padding-left: 18px; }
+.outputs { margin-top: 22px; }
+.tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); }
+.tab {
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px 8px 0 0;
+  padding: 8px 14px;
+  font-size: 0.92rem;
+}
+.tab[aria-selected="true"] {
+  color: var(--ink);
+  background: var(--panel);
+  border-color: var(--border);
+  font-weight: 600;
+}
+.panel {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  background: var(--panel);
+  position: relative;
+}
+.panel .copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 11px;
+  font-size: 0.82rem;
+}
+pre {
+  margin: 0;
+  padding: 16px 16px 18px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--code-ink);
+  background: var(--code-bg);
+  border-radius: 0 0 10px 10px;
+}
+pre.empty { color: var(--muted); }
+.hidden { display: none; }
+footer { margin-top: 34px; color: var(--muted); font-size: 0.84rem; }
+footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>curl to fetch</h1>
+    <p>Paste a curl command, get JavaScript fetch and Python requests code. Everything runs in your browser.</p>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" id="sample">Load sample</button>
+    <button type="button" id="clear">Clear</button>
+  </div>
+
+  <label class="field" for="input">curl command</label>
+  <textarea id="input" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="curl 'https://api.example.com/v1/users' -H 'Authorization: Bearer TOKEN' -d '{&quot;name&quot;:&quot;Ada&quot;}'"></textarea>
+
+  <div id="error" class="msg err hidden" role="alert"></div>
+  <div id="warnings" class="msg warn hidden"></div>
+
+  <div class="outputs">
+    <div class="tabs" role="tablist" aria-label="Output language">
+      <button class="tab" id="tab-js" role="tab" aria-selected="true" aria-controls="panel-js">JavaScript (fetch)</button>
+      <button class="tab" id="tab-py" role="tab" aria-selected="false" aria-controls="panel-py">Python (requests)</button>
+    </div>
+    <div class="panel" id="panel-js" role="tabpanel" aria-labelledby="tab-js">
+      <button type="button" class="copy" data-target="out-js">Copy</button>
+      <pre class="empty" id="out-js">Your JavaScript fetch code will appear here.</pre>
+    </div>
+    <div class="panel hidden" id="panel-py" role="tabpanel" aria-labelledby="tab-py">
+      <button type="button" class="copy" data-target="out-py">Copy</button>
+      <pre class="empty" id="out-py">Your Python requests code will appear here.</pre>
+    </div>
+  </div>
+
+  <footer>
+    Single file, no tracking, no network calls. Nothing you paste leaves this page.
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- shell tokenizer ---------- */
+
+// Collapse line continuations (backslash, caret, or backtick before a newline).
+function preprocess(s) {
+  return s.replace(/[\\^`]\r?\n/g, " ");
+}
+
+// Split a shell command line into argument tokens, honoring single quotes,
+// double quotes, ANSI-C $'...' quoting, and backslash escapes.
+function tokenize(input) {
+  const tokens = [];
+  let cur = "";
+  let has = false;
+  let i = 0;
+  const n = input.length;
+  while (i < n) {
+    const c = input[i];
+    if (c === "\\") {
+      const next = input[i + 1];
+      if (next === undefined) { i++; continue; }
+      if (next === "\n") { i += 2; continue; }
+      if (next === "\r" && input[i + 2] === "\n") { i += 3; continue; }
+      cur += next; has = true; i += 2; continue;
+    }
+    if (c === '"') {
+      has = true; i++;
+      while (i < n && input[i] !== '"') {
+        if (input[i] === "\\") {
+          const nx = input[i + 1];
+          if (nx === '"' || nx === "\\" || nx === "$" || nx === "`") { cur += nx; i += 2; }
+          else if (nx === "\n") { i += 2; }
+          else { cur += "\\"; i++; }
+        } else { cur += input[i]; i++; }
+      }
+      if (i >= n) throw new Error("Unbalanced double quote in the command.");
+      i++; continue;
+    }
+    if (c === "'") {
+      has = true; i++;
+      while (i < n && input[i] !== "'") { cur += input[i]; i++; }
+      if (i >= n) throw new Error("Unbalanced single quote in the command.");
+      i++; continue;
+    }
+    if (c === "$" && input[i + 1] === "'") {
+      has = true; i += 2;
+      const map = { n: "\n", t: "\t", r: "\r", "\\": "\\", "'": "'", '"': '"', a: "\x07", b: "\b", f: "\f", v: "\v", "0": "\0", e: "\x1b" };
+      while (i < n && input[i] !== "'") {
+        if (input[i] === "\\") {
+          const nx = input[i + 1];
+          if (nx !== undefined && Object.prototype.hasOwnProperty.call(map, nx)) { cur += map[nx]; i += 2; }
+          else if (nx !== undefined) { cur += nx; i += 2; }
+          else { i++; }
+        } else { cur += input[i]; i++; }
+      }
+      if (i >= n) throw new Error("Unbalanced quote in the command.");
+      i++; continue;
+    }
+    if (c === " " || c === "\t" || c === "\n" || c === "\r") {
+      if (has) { tokens.push(cur); cur = ""; has = false; }
+      i++; continue;
+    }
+    cur += c; has = true; i++;
+  }
+  if (has) tokens.push(cur);
+  return tokens;
+}
+
+/* ---------- curl parser ---------- */
+
+function parseHeader(h) {
+  const idx = h.indexOf(":");
+  if (idx === -1) {
+    if (h.endsWith(";")) return { name: h.slice(0, -1).trim(), value: "" };
+    return { name: h.trim(), value: "" };
+  }
+  return { name: h.slice(0, idx).trim(), value: h.slice(idx + 1).trim() };
+}
+
+function parseForm(f, isString) {
+  const idx = f.indexOf("=");
+  if (idx === -1) return { name: f, value: "", isFile: false };
+  const name = f.slice(0, idx);
+  let value = f.slice(idx + 1);
+  let isFile = false;
+  if (!isString && (value[0] === "@" || value[0] === "<")) { isFile = true; value = value.slice(1); }
+  if (isFile) { const semi = value.indexOf(";"); if (semi !== -1) value = value.slice(0, semi); }
+  return { name: name, value: value, isFile: isFile };
+}
+
+function parseCurl(tokens) {
+  const req = {
+    method: null, url: null, extraUrls: [], headers: [], data: [], form: [],
+    user: null, get: false, head: false, compressed: false, location: false,
+    insecure: false, jsonFlag: false
+  };
+  let i = 0;
+  if (tokens.length && tokens[0].toLowerCase() === "curl") i = 1;
+
+  const shortMap = {
+    X: "method", H: "header", d: "data", F: "form", u: "user", b: "cookie",
+    A: "user-agent", e: "referer", o: "ignore", x: "ignore", T: "ignore",
+    G: "get", I: "head", L: "location", k: "insecure",
+    s: "noop", S: "noop", v: "noop", f: "noop", "#": "noop", n: "noop"
+  };
+  const shortVal = { X: 1, H: 1, d: 1, F: 1, u: 1, b: 1, A: 1, e: 1, o: 1, x: 1, T: 1 };
+  const longVal = {
+    request: "method", header: "header", data: "data", "data-raw": "data-raw",
+    "data-binary": "data-binary", "data-ascii": "data", "data-urlencode": "data-urlencode",
+    json: "json", form: "form", "form-string": "form-string", user: "user",
+    cookie: "cookie", "user-agent": "user-agent", referer: "referer", url: "url",
+    proxy: "ignore", output: "ignore", "connect-timeout": "ignore", "max-time": "ignore",
+    retry: "ignore", range: "ignore", "cert": "ignore", "key": "ignore"
+  };
+  const longBool = {
+    get: "get", head: "head", compressed: "compressed", location: "location",
+    insecure: "insecure", silent: "noop", "show-error": "noop", verbose: "noop",
+    fail: "noop", include: "noop", "remote-name": "noop"
+  };
+
+  function next() {
+    i++;
+    if (i >= tokens.length) throw new Error("An option is missing its value.");
+    return tokens[i];
+  }
+  function addUrl(u) { if (req.url === null) req.url = u; else req.extraUrls.push(u); }
+  function applyValue(canon, val) {
+    switch (canon) {
+      case "method": req.method = val; break;
+      case "header": req.headers.push(parseHeader(val)); break;
+      case "data": req.data.push({ kind: "data", value: val }); break;
+      case "data-raw": req.data.push({ kind: "raw", value: val }); break;
+      case "data-binary": req.data.push({ kind: "binary", value: val }); break;
+      case "data-urlencode": req.data.push({ kind: "urlencode", value: val }); break;
+      case "json": req.data.push({ kind: "json", value: val }); req.jsonFlag = true; break;
+      case "form": req.form.push(parseForm(val, false)); break;
+      case "form-string": req.form.push(parseForm(val, true)); break;
+      case "user": req.user = val; break;
+      case "cookie": req.headers.push({ name: "Cookie", value: val }); break;
+      case "user-agent": req.headers.push({ name: "User-Agent", value: val }); break;
+      case "referer": req.headers.push({ name: "Referer", value: val }); break;
+      case "url": addUrl(val); break;
+      case "ignore": break;
+    }
+  }
+  function applyBool(canon) {
+    switch (canon) {
+      case "get": req.get = true; break;
+      case "head": req.head = true; break;
+      case "compressed": req.compressed = true; break;
+      case "location": req.location = true; break;
+      case "insecure": req.insecure = true; break;
+      default: break;
+    }
+  }
+
+  for (; i < tokens.length; i++) {
+    const tok = tokens[i];
+    if (tok === "") continue;
+    if (tok === "--") { for (i++; i < tokens.length; i++) addUrl(tokens[i]); break; }
+    if (tok.length > 2 && tok.slice(0, 2) === "--") {
+      let name = tok.slice(2);
+      let inlineVal = null;
+      const eq = name.indexOf("=");
+      if (eq !== -1) { inlineVal = name.slice(eq + 1); name = name.slice(0, eq); }
+      if (Object.prototype.hasOwnProperty.call(longVal, name)) {
+        const val = inlineVal !== null ? inlineVal : next();
+        applyValue(longVal[name], val);
+      } else if (Object.prototype.hasOwnProperty.call(longBool, name)) {
+        applyBool(longBool[name]);
+      }
+      // Unknown long options are ignored and do not consume the next token.
+    } else if (tok.length >= 2 && tok[0] === "-" && tok[1] !== "-") {
+      let j = 1, done = false;
+      while (j < tok.length && !done) {
+        const f = tok[j];
+        const canon = shortMap[f];
+        if (canon && shortVal[f]) {
+          let val = tok.slice(j + 1);
+          if (val === "") val = next();
+          applyValue(canon, val);
+          done = true;
+        } else if (canon) {
+          if (canon !== "noop") applyBool(canon);
+          j++;
+        } else {
+          j++; // unknown short flag, skip it
+        }
+      }
+    } else {
+      addUrl(tok);
+    }
+  }
+  return req;
+}
+
+/* ---------- request model ---------- */
+
+function urlencodePart(v) {
+  const at = v.indexOf("@");
+  const eq = v.indexOf("=");
+  if (eq !== -1 && (at === -1 || eq < at)) {
+    const name = v.slice(0, eq);
+    const content = v.slice(eq + 1);
+    return (name ? name + "=" : "") + encodeURIComponent(content);
+  }
+  if (v[0] === "=") return encodeURIComponent(v.slice(1));
+  if (at !== -1) return v; // file reference, cannot be read
+  return encodeURIComponent(v);
+}
+
+function formDecode(x) {
+  try { return decodeURIComponent(x.replace(/\+/g, " ")); } catch (e) { return x; }
+}
+
+function parseFormPairs(s) {
+  return s.split("&").filter(function (x) { return x.length > 0; }).map(function (kv) {
+    const idx = kv.indexOf("=");
+    const k = idx === -1 ? kv : kv.slice(0, idx);
+    const v = idx === -1 ? "" : kv.slice(idx + 1);
+    return [formDecode(k), formDecode(v)];
+  });
+}
+
+function buildModel(req) {
+  const warnings = [];
+
+  let dataParts = req.data.slice();
+  let getQuery = "";
+  if (req.get && dataParts.length) {
+    getQuery = dataParts.map(function (p) {
+      return p.kind === "urlencode" ? urlencodePart(p.value) : p.value;
+    }).join("&");
+    dataParts = [];
+  }
+
+  const dataPresent = dataParts.length > 0;
+  const multipart = req.form.length > 0;
+
+  let method = req.method ? req.method.toUpperCase() : null;
+  if (!method) {
+    if (req.head) method = "HEAD";
+    else if (multipart || dataPresent) method = "POST";
+    else method = "GET";
+  }
+
+  if (req.url === null) throw new Error("No URL was found in the curl command.");
+  let url = req.url;
+  if (req.extraUrls.length) warnings.push("Multiple URLs found. Using the first one (" + url + ").");
+  if (getQuery) url += (url.indexOf("?") === -1 ? "?" : "&") + getQuery;
+
+  function headerVal(name) {
+    for (let k = 0; k < req.headers.length; k++) {
+      if (req.headers[k].name.toLowerCase() === name) return req.headers[k].value;
+    }
+    return null;
+  }
+  const explicitCT = headerVal("content-type");
+  let effectiveCT;
+  if (explicitCT !== null) effectiveCT = explicitCT.toLowerCase();
+  else if (req.jsonFlag) effectiveCT = "application/json";
+  else if (dataPresent) effectiveCT = "application/x-www-form-urlencoded";
+  else effectiveCT = "";
+
+  let bodyString = "";
+  if (dataPresent) {
+    const allJson = dataParts.every(function (p) { return p.kind === "json"; });
+    const sep = allJson ? "" : "&";
+    bodyString = dataParts.map(function (p) {
+      if (p.kind === "urlencode") return urlencodePart(p.value);
+      if ((p.kind === "data" || p.kind === "binary") && p.value[0] === "@") {
+        warnings.push("Body data references a local file (" + p.value + "). The converter cannot read files, so the reference is shown as plain text.");
+      }
+      return p.value;
+    }).join(sep);
+  }
+
+  let bodyMode = "none", jsonParsed, formPairs;
+  if (multipart) {
+    bodyMode = "multipart";
+  } else if (dataPresent) {
+    if (effectiveCT.indexOf("application/json") !== -1 || req.jsonFlag) {
+      try { jsonParsed = JSON.parse(bodyString); bodyMode = "json"; }
+      catch (e) { bodyMode = "raw"; }
+    } else if (effectiveCT.indexOf("x-www-form-urlencoded") !== -1) {
+      const pairs = parseFormPairs(bodyString);
+      const ok = pairs.length > 0 && bodyString.indexOf("\n") === -1 &&
+        pairs.every(function (p) { return p[0] !== ""; });
+      if (ok) { formPairs = pairs; bodyMode = "form"; } else { bodyMode = "raw"; }
+    } else {
+      bodyMode = "raw";
+    }
+  }
+
+  if ((method === "GET" || method === "HEAD") && bodyMode !== "none") {
+    warnings.push("Method " + method + " carries a request body. The fetch API cannot send a body with " + method + " requests; the Python output can.");
+  }
+
+  const headers = req.headers.map(function (h) { return { name: h.name, value: h.value }; });
+  function hasHeader(name) {
+    return headers.some(function (h) { return h.name.toLowerCase() === name; });
+  }
+  if (dataPresent && explicitCT === null && !req.jsonFlag) {
+    headers.push({ name: "Content-Type", value: "application/x-www-form-urlencoded" });
+  }
+  if (req.jsonFlag) {
+    if (explicitCT === null) headers.push({ name: "Content-Type", value: "application/json" });
+    if (!hasHeader("accept")) headers.push({ name: "Accept", value: "application/json" });
+  }
+
+  if (req.insecure) warnings.push("The -k/--insecure flag has no fetch equivalent. The Python output uses verify=False; browsers cannot disable TLS verification.");
+
+  return {
+    method: method, url: url, headers: headers, bodyMode: bodyMode, bodyString: bodyString,
+    jsonParsed: jsonParsed, formPairs: formPairs, formParts: req.form, user: req.user,
+    insecure: req.insecure, warnings: warnings
+  };
+}
+
+/* ---------- code generators ---------- */
+
+function jsStr(s) { return JSON.stringify(s); }
+function pyStr(s) { return JSON.stringify(s); }
+
+function indentNest(s, pad) {
+  return s.split("\n").map(function (line, idx) { return idx === 0 ? line : pad + line; }).join("\n");
+}
+
+function b64(s) {
+  try { return btoa(unescape(encodeURIComponent(s))); }
+  catch (e) { try { return btoa(s); } catch (e2) { return s; } }
+}
+
+function pyLiteral(v, indent) {
+  const pad = "    ".repeat(indent);
+  const pad1 = "    ".repeat(indent + 1);
+  if (v === null) return "None";
+  const t = typeof v;
+  if (t === "boolean") return v ? "True" : "False";
+  if (t === "number") return String(v);
+  if (t === "string") return pyStr(v);
+  if (Array.isArray(v)) {
+    if (v.length === 0) return "[]";
+    const items = v.map(function (x) { return pad1 + pyLiteral(x, indent + 1); });
+    return "[\n" + items.join(",\n") + "\n" + pad + "]";
+  }
+  if (t === "object") {
+    const keys = Object.keys(v);
+    if (keys.length === 0) return "{}";
+    const items = keys.map(function (k) { return pad1 + pyStr(k) + ": " + pyLiteral(v[k], indent + 1); });
+    return "{\n" + items.join(",\n") + "\n" + pad + "}";
+  }
+  return "None";
+}
+
+function filterContentType(headers, mode) {
+  return headers.filter(function (h) {
+    const lname = h.name.toLowerCase();
+    if (lname !== "content-type") return true;
+    const lval = h.value.trim().toLowerCase();
+    if (mode === "multipart") return false;
+    if (mode === "json" && lval === "application/json") return false;
+    if (mode === "form" && lval === "application/x-www-form-urlencoded") return false;
+    return true;
+  });
+}
+
+function genFetch(m) {
+  let headers = filterContentType(m.headers.map(function (h) { return { name: h.name, value: h.value }; }), m.bodyMode);
+  if (m.user) headers.push({ name: "Authorization", value: "Basic " + b64(m.user) });
+
+  const noBody = (m.method === "GET" || m.method === "HEAD");
+  let pre = "";
+  const opts = [];
+  opts.push("  method: " + jsStr(m.method) + ",");
+  if (headers.length) {
+    opts.push("  headers: {\n" + headers.map(function (h) {
+      return "    " + jsStr(h.name) + ": " + jsStr(h.value) + ",";
+    }).join("\n") + "\n  },");
+  }
+  if (!noBody) {
+    if (m.bodyMode === "json") {
+      const lit = indentNest(JSON.stringify(m.jsonParsed, null, 2), "  ");
+      opts.push("  body: JSON.stringify(" + lit + "),");
+    } else if (m.bodyMode === "form") {
+      const lit = "{\n" + m.formPairs.map(function (p) {
+        return "    " + jsStr(p[0]) + ": " + jsStr(p[1]) + ",";
+      }).join("\n") + "\n  }";
+      opts.push("  body: new URLSearchParams(" + lit + "),");
+    } else if (m.bodyMode === "raw") {
+      opts.push("  body: " + jsStr(m.bodyString) + ",");
+    } else if (m.bodyMode === "multipart") {
+      pre += "const form = new FormData();\n";
+      m.formParts.forEach(function (f) {
+        if (f.isFile) pre += "// form.append(" + jsStr(f.name) + ", fileInput.files[0]); // \"" + f.value + "\" must be a File or Blob chosen in the browser\n";
+        else pre += "form.append(" + jsStr(f.name) + ", " + jsStr(f.value) + ");\n";
+      });
+      pre += "\n";
+      opts.push("  body: form,");
+    }
+  }
+  let code = pre + "fetch(" + jsStr(m.url) + ", {\n" + opts.join("\n") + "\n})\n";
+  code += "  .then((response) => response.json())\n";
+  code += "  .then((data) => console.log(data))\n";
+  code += "  .catch((error) => console.error(error));";
+  return code;
+}
+
+function genPython(m) {
+  let headers = filterContentType(m.headers.map(function (h) { return { name: h.name, value: h.value }; }), m.bodyMode);
+
+  let code = "import requests\n\n";
+  code += "url = " + pyStr(m.url) + "\n\n";
+  const args = ["url"];
+
+  if (headers.length) {
+    code += "headers = {\n" + headers.map(function (h) {
+      return "    " + pyStr(h.name) + ": " + pyStr(h.value) + ",";
+    }).join("\n") + "\n}\n\n";
+    args.push("headers=headers");
+  }
+
+  if (m.bodyMode === "json") {
+    code += "payload = " + pyLiteral(m.jsonParsed, 0) + "\n\n";
+    args.push("json=payload");
+  } else if (m.bodyMode === "form") {
+    code += "data = {\n" + m.formPairs.map(function (p) {
+      return "    " + pyStr(p[0]) + ": " + pyStr(p[1]) + ",";
+    }).join("\n") + "\n}\n\n";
+    args.push("data=data");
+  } else if (m.bodyMode === "raw") {
+    code += "data = " + pyStr(m.bodyString) + "\n\n";
+    args.push("data=data");
+  } else if (m.bodyMode === "multipart") {
+    const entries = m.formParts.map(function (f) {
+      return f.isFile
+        ? "    " + pyStr(f.name) + ": open(" + pyStr(f.value) + ", \"rb\"),"
+        : "    " + pyStr(f.name) + ": (None, " + pyStr(f.value) + "),";
+    });
+    code += "files = {\n" + entries.join("\n") + "\n}\n\n";
+    args.push("files=files");
+  }
+
+  if (m.user) {
+    const idx = m.user.indexOf(":");
+    const u = idx === -1 ? m.user : m.user.slice(0, idx);
+    const p = idx === -1 ? "" : m.user.slice(idx + 1);
+    args.push("auth=(" + pyStr(u) + ", " + pyStr(p) + ")");
+  }
+  if (m.insecure) args.push("verify=False");
+
+  const fn = m.method.toLowerCase();
+  const known = { get: 1, post: 1, put: 1, delete: 1, patch: 1, head: 1, options: 1 };
+  if (known[fn]) {
+    code += "response = requests." + fn + "(" + args.join(", ") + ")\n\n";
+  } else {
+    args.unshift(pyStr(m.method));
+    code += "response = requests.request(" + args.join(", ") + ")\n\n";
+  }
+  code += "print(response.status_code)\nprint(response.text)\n";
+  return code;
+}
+
+/* ---------- wiring ---------- */
+
+const inputEl = document.getElementById("input");
+const errEl = document.getElementById("error");
+const warnEl = document.getElementById("warnings");
+const outJs = document.getElementById("out-js");
+const outPy = document.getElementById("out-py");
+const tabJs = document.getElementById("tab-js");
+const tabPy = document.getElementById("tab-py");
+const panelJs = document.getElementById("panel-js");
+const panelPy = document.getElementById("panel-py");
+
+const SAMPLE = "curl 'https://api.example.com/v1/users' \\\n  -X POST \\\n  -H 'Content-Type: application/json' \\\n  -H 'Authorization: Bearer TOKEN' \\\n  -d '{\"name\":\"Ada\",\"role\":\"admin\",\"active\":true}'";
+
+function setPlaceholderOutputs() {
+  outJs.textContent = "Your JavaScript fetch code will appear here.";
+  outPy.textContent = "Your Python requests code will appear here.";
+  outJs.classList.add("empty");
+  outPy.classList.add("empty");
+}
+
+function showError(msg) {
+  errEl.textContent = msg;
+  errEl.classList.remove("hidden");
+}
+
+function showWarnings(list) {
+  if (!list || !list.length) { warnEl.classList.add("hidden"); warnEl.innerHTML = ""; return; }
+  const ul = document.createElement("ul");
+  list.forEach(function (w) {
+    const li = document.createElement("li");
+    li.textContent = w;
+    ul.appendChild(li);
+  });
+  warnEl.innerHTML = "";
+  const head = document.createElement("strong");
+  head.textContent = list.length === 1 ? "Note" : "Notes";
+  warnEl.appendChild(head);
+  warnEl.appendChild(ul);
+  warnEl.classList.remove("hidden");
+}
+
+function convert() {
+  errEl.classList.add("hidden");
+  warnEl.classList.add("hidden");
+  const raw = inputEl.value;
+  if (!raw.trim()) { setPlaceholderOutputs(); return; }
+  let model;
+  try {
+    const tokens = tokenize(preprocess(raw));
+    const req = parseCurl(tokens);
+    model = buildModel(req);
+  } catch (e) {
+    showError(e && e.message ? e.message : String(e));
+    setPlaceholderOutputs();
+    return;
+  }
+  let js, py;
+  try { js = genFetch(model); py = genPython(model); }
+  catch (e) {
+    showError("Could not generate code: " + (e && e.message ? e.message : String(e)));
+    setPlaceholderOutputs();
+    return;
+  }
+  outJs.textContent = js;
+  outPy.textContent = py;
+  outJs.classList.remove("empty");
+  outPy.classList.remove("empty");
+  showWarnings(model.warnings);
+}
+
+function selectTab(which) {
+  const js = which === "js";
+  tabJs.setAttribute("aria-selected", js ? "true" : "false");
+  tabPy.setAttribute("aria-selected", js ? "false" : "true");
+  panelJs.classList.toggle("hidden", !js);
+  panelPy.classList.toggle("hidden", js);
+}
+
+tabJs.addEventListener("click", function () { selectTab("js"); });
+tabPy.addEventListener("click", function () { selectTab("py"); });
+
+document.getElementById("sample").addEventListener("click", function () {
+  inputEl.value = SAMPLE;
+  convert();
+  inputEl.focus();
+});
+
+document.getElementById("clear").addEventListener("click", function () {
+  inputEl.value = "";
+  convert();
+  inputEl.focus();
+});
+
+Array.prototype.forEach.call(document.querySelectorAll(".copy"), function (btn) {
+  btn.addEventListener("click", function () {
+    const target = document.getElementById(btn.getAttribute("data-target"));
+    if (!target || target.classList.contains("empty")) return;
+    const text = target.textContent;
+    const done = function () {
+      const old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = old; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  });
+});
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) { /* ignore */ }
+  document.body.removeChild(ta);
+}
+
+inputEl.addEventListener("input", convert);
+setPlaceholderOutputs();
+</script>
+</body>
+</html>
